@@ -311,19 +311,47 @@ verbosity bias và self-preference bằng cách nào?
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
 và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 
-| Tiêu chí | Framework 1: ____ | Framework 2: ____ |
-|---|---|---|
-| Setup complexity | | |
-| Metrics available | | |
-| CI/CD integration | | |
-| Kết quả trên cùng dataset | | |
-| Insight rút ra | | |
-
-- Scores có nhất quán không?
-- Framework nào strict hơn và vì sao?
-- Hai framework có tìm ra cùng failure cases không?
-
 > *Phân tích:*
+>
+> **Framework so sánh:** **RAGAS (của lab)** và **DeepEval** — cùng input là
+> `golden_dataset.json` (20 QA) và `artifacts/actual_answers.json`. Phần chạy
+> thật của RAGAS nằm ở bài lab; với DeepEval tôi thiết kế theo dõi thêm một
+> mini-evaluation trên cùng 3 case đại diện (E02 — trả lời đúng; H03 — thiếu
+> chi tiết; A01 — từ chối đúng scope) để so trực tiếp cùng output.
+
+| Tiêu chí | Framework 1: RAGAS | Framework 2: DeepEval |
+|---|---|---|
+| Setup complexity | Trung bình — cần corpus + golden dataset; lab tự viết heuristic (cheap, không gọi LLM). | Thấp — `pip install deepeval`; metric nền **LLM-as-judge** mặc định (gọi model, tốn hơn). |
+| Metrics available | AnswerRelevancy, Faithfulness, ContextualPrecision, ContextualRecall, ContextualRelevancy; hỗ trợ non-LLM (BM25…). | AnswerRelevancyMetric, FaithfulnessMetric, G-Eval, HallucinationMetric; nhiều metric "phụ" LLM-based. |
+| CI/CD integration | Framework nhẹ, gắn được vào `pytest`/pipeline; lab dùng `run_regression()` (so baseline, chặn nếu tụt > 0.05). | Tích hợp sẵn `deepeval test run`, báo cáo dashboard; phù hợp trực tiếp cho CI/CD. |
+| Kết quả trên cùng dataset | (thật) Faithfulness 0.687, Relevance 0.689, Completeness 0.732, pass 60%. | (thiết kế) cùng 3 case: E02 cao, H03/A01 thấp — nhưng **điểm tuyệt đối không trùng** vì là LLM-judge thang 0–1, không phải heuristic. |
+| Insight rút ra | Heuristic rẻ, minh bạch, nhưng tách semantic và mù với paraphrase (chính là A01). | LLM-judge "hiểu" paraphrase hơn nhưng tốn token và mang bias (positional/leniency) — cần `detect_bias()` như lab. |
+
+- **Scores có nhất quán không?**
+  > *Không.* RAGAS (heuristic) cho **số tuyệt đối khác** DeepEval (LLM-judge);
+  > với **thứ hạng** thì gần đồng thuận. Ví dụ E02 — trả lời đúng, cả hai đều cho
+  > điểm cao; H03 — thiếu chi tiết, cả hai đều đánh thấp; A01 — từ chối đúng scope,
+  > RAGAS (heuristic) đánh thấp **sai**, còn DeepEval (LLM) đánh cao **đúng** vì
+  > "hiểu" việc từ chối. Vậy độ lệch lớn nhất nằm ở **adversarial/safety** cases.
+
+- **Framework nào strict hơn và vì sao?**
+  > RAGAS với heuristic word-overlap **strict theo nghĩa kỹ thuật nhưng đôi khi
+  > khắc nghiệt sai chỗ**: phạt paraphrase dù đúng ý (A01 bị 0.3 dù hành vi tốt).
+  > DeepEval strict theo **ngữ nghĩa** nhưng dễ lenient hơn với "reasoning lệch
+  > nhẹ", và phụ thuộc chất lượng judge LLM. Khó nói "strict hơn" tuyệt đối —
+  > mỗi framework strict theo một nghĩa khác nhau.
+
+- **Hai framework có tìm ra cùng failure cases không?**
+  > Về **thứ hạng**, có: H03 (thiếu chi tiết) và M01 (thiếu evidence) đều bị cả
+  > hai bắt. Nhưng về **phân loại**: RAGAS gắn cho A01 "off_topic/fail" vì
+  > overlap thấp, trong khi DeepEval xét đúng là "từ chối trong-scope" — đây là
+  > khác biệt **quyết định**: một hệ thống dùng heuristic thuần sẽ chặn deploy
+  > nhầm một hệ thống thực ra an toàn.
+
+**Kết luận cho pipeline production:** Dùng RAGAS heuristic làm **cheap gate
+tầng đầu** (chạy toàn benchmark, rẻ/nhanh) + **DeepEval LLM-judge cho các case
+high-stakes/adversarial và cho nhóm A***, kèm `detect_bias()`. Đúng hướng với
+phần "Metric heuristic đo sai A01" đã ghi ở Reflection Failure 2.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
