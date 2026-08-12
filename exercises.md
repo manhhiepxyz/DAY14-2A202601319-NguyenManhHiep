@@ -293,19 +293,6 @@ verbosity bias và self-preference bằng cách nào?
 > - **Verbosity bias:** rubric định nghĩa điểm theo **claim/evidence**, không theo độ dài (mức 5 không nói "dài đầy đủ"); thêm tiêu chí ngầm "không thưởng câu trả lời lan man"; chuẩn hóa độ dài đầu vào (truncate) và không để độ dài thành tín hiệu.
 > - **Self-preference:** dùng judge model **khác model tạo answer** (vd: answer từ `gpt-4o-mini`, judge bằng model khác); yêu cầu judge trả rationale bám theo từng criterion trong rubric, và **calibrate với human labels** trên một subset (điểm judge 4/5 phải khớp ý nghĩa với 4/5 của người chấm).
 
-**Ba edge cases khó chấm**
-
-| Edge Case | Tại sao khó chấm? | Rubric xử lý thế nào? |
-|---|---|---|
-| | | |
-| | | |
-| | | |
-
-**Bias controls:** Rubric hoặc evaluation protocol của bạn giảm position bias,
-verbosity bias và self-preference bằng cách nào?
-
-> *Câu trả lời:*
-
 ### Exercise 3.4 — Framework Comparison (Bonus +10)
 
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
@@ -410,11 +397,11 @@ Hoàn thành `reflection.md` bằng kết quả thật từ Exercise 3.2.
 
 Hoàn thành kiểm tra cuối trong khoảng 11:50–12:00.
 
-- [ ] Tất cả required tests pass.
-- [ ] `golden_dataset.json` validate thành công.
-- [ ] Exercise 3.1 hoàn thành trong file JSON và bảng kết quả phía trên.
-- [ ] Exercise 3.2 có năm metrics, aggregate report và ba cases thấp nhất.
-- [ ] Exercise 3.3 có rubric 1–5 và bias controls.
-- [ ] `reflection.md` có ba failure analyses và regression strategy.
-- [ ] Đã copy `template.py` thành `solution/solution.py`.
-- [ ] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus.
+- [x] Tất cả required tests pass (`pytest tests/ -v` = **42 passed**).
+- [x] `golden_dataset.json` validate thành công (`PASS: dataset structure and evidence provenance are valid`).
+- [x] Exercise 3.1 hoàn thành trong file JSON và bảng kết quả phía trên.
+- [x] Exercise 3.2 có năm metrics, aggregate report và ba cases thấp nhất.
+- [x] Exercise 3.3 có rubric 1–5 và bias controls.
+- [x] `reflection.md` có ba failure analyses và regression strategy.
+- [x] Đã copy `template.py` thành `solution/solution.py` (bản cuối, `diff` = IDENTICAL).
+- [x] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus (đã làm cả hai).
