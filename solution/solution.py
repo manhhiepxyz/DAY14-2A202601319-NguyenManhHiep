@@ -456,8 +456,27 @@ def rerank_by_overlap(contexts: list[str], query: str) -> list[str]:
     Hint: sorted(contexts, key=lambda c: len(_tokenize(c) & _tokenize(query)),
                  reverse=True)
     """
-    # TODO (Bonus — Exercise 3.5): implement the reranker
-    raise NotImplementedError("Implement rerank_by_overlap")
+    # ===== Giải thích =====
+    # Đây là một reranker lexicographic tối giản: sắp lại thứ tự các chunks sao
+    # cho chunk nào "giống câu hỏi" nhất (theo từ vựng) nằm lên đầu.
+    #
+    # Vai trò từng biến:
+    #   - contexts: list các chunks đã truy hồi từ retriever (dạng string thô).
+    #   - query: câu hỏi gốc của user, dùng làm "kim chỉ nam" để xếp hạng lại.
+    #   - key=lambda c: ...: hàm tính "điểm tương đồng" cho từng chunk c.
+    #       - _tokenize(c): set các từ khoá của chunk (đã bỏ stopword, chữ thường).
+    #       - _tokenize(query): set các từ khoá của câu hỏi.
+    #       - toán tử & (intersection): tập các từ XUẤT HIỆN Ở CẢ HAI, chính là
+    #         số từ khoá chung giữa chunk và câu hỏi.
+    #       - len(...): đếm số từ chung đó. Càng nhiều → chunk càng liên quan.
+    #   - reverse=True: sắp giảm dần — chunk có overlap lớn nhất đứng đầu tiên.
+    #
+    # Vì sao lại làm vậy?
+    #   - Context Precision là metric rank-aware (AP@K): chunk liên quan ở vị trí
+    #     cao hơn → điểm cao hơn. Rerank kéo chunk liên quan lên đầu → Precision
+    #     tăng mà KHÔNG đổi tập chunks đã lấy (union giữ nguyên) → Recall không đổi.
+    #     Đây là lý do test chỉ assert "after >= before", không assert recall.
+    return sorted(contexts, key=lambda c: len(_tokenize(c) & _tokenize(query)), reverse=True)
 
 
 # ---------------------------------------------------------------------------

@@ -338,20 +338,37 @@ thay đổi Context Recall hay không.
 
 | ID | Recall before | Recall after | Precision before | Precision after | Delta Precision |
 |---|---:|---:|---:|---:|---:|
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| **Avg** | | | | | |
+| E01 | 1.000 | 1.000 | 1.000 | 1.000 | 0.000 |
+| E03 | 1.000 | 1.000 | 1.000 | 1.000 | 0.000 |
+| M02 | 1.000 | 1.000 | 0.887 | 1.000 | +0.113 |
+| M05 | 1.000 | 1.000 | 0.750 | 0.500 | −0.250 |
+| H02 | 1.000 | 1.000 | 0.700 | 1.000 | +0.300 |
+| H04 | 1.000 | 1.000 | 0.950 | 0.950 | 0.000 |
+| A02 | 0.793 | 0.793 | 1.000 | 1.000 | 0.000 |
+| A03 | 0.656 | 0.656 | 1.000 | 1.000 | 0.000 |
+| **Avg** | **0.931** | **0.931** | **0.911** | **0.931** | **+0.020** |
 
 **Tại sao Recall dự kiến không đổi?**
 
-> *Câu trả lời:*
+> *Câu trả lời:* Vì `rerank_by_overlap` chỉ **đổi thứ tự** (sort) các chunks đã
+> truy hồi, không thêm/xoá chunk nào. Context Recall = (union các tokens của mọi
+> chunk) ∩ expected / expected — union phụ thuộc *tập hợp* chunks, không phụ thuộc
+> *thứ tự*. Rerank có kéo chunk liên quan lên đầu cũng không đưa thêm chunk mới
+> vào, nên union (và do đó Recall) bất biến. Đúng như dữ liệu: Recall giữ nguyên
+> 0.931 ở mọi case, kể cả A02/A03 có Recall < 1 (evidence nằm ngoài top-k, rerank
+> không thể "tìm lại").
 
 **Khi nào reranking không đủ và cần sửa retriever/query/chunking?**
 
-> *Câu trả lời:*
+> *Câu trả lời:* Rerank chỉ sửa **thứ tự**, không sửa **tập hợp** — nên bất lực
+> khi evidence nằm ngoài top-k (Recall thấp), khi query và chunk liên quan dùng từ
+> vựng khác nhau, hoặc khi tài liệu phân tán quá nhiều chunk. Minh chứng trực
+> tiếp từ dữ liệu: **M05** — chunk "medical leave" có overlap từ vựng cao hơn
+> (5 vs 4) vì trùng "scholarship"/"regular term", nên bị kéo lên đầu dù không chứa
+> evidence; Precision tụt 0.750 → 0.500, tức rerank **làm hại** case này. Lúc đó
+> cần: tăng `top_k` (để evidence vào top-k trước), query expansion / cải thiện
+> embedding (bắt đồng nghĩa như "renew"↔"eligible"), hoặc đổi sang cross-encoder
+> reranker hiểu ngữ nghĩa thay vì so overlap từ vựng thuần.
 
 ---
 
